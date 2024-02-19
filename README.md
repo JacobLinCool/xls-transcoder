@@ -46,3 +46,9 @@ Not only GET requests are supported, you can also use POST or other methods if n
 ```bash
 curl -X POST -d 'action=download&file=test.xls' 'https://xls-transcoder.jacob.workers.dev/json/test.json?from=https://example.com/run-action'
 ```
+
+## Deployment
+
+You can use [Cloudflare Workers](https://workers.cloudflare.com/) to deploy your own instance of this service:
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/JacobLinCool/xls-transcoder)
