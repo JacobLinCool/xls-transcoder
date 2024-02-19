@@ -11,7 +11,14 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v3
+              with:
+                  run_install: true
+
             - name: Build & Deploy Worker
               uses: cloudflare/wrangler-action@v3
               with:
