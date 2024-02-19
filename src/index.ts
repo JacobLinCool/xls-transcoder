@@ -42,6 +42,7 @@ export default {
 		const transcoded = await transcode(buffer);
 
 		const headers = new Headers(res.headers);
+		headers.delete("Content-Disposition");
 		if (transcode === json) {
 			headers.set("Content-Type", "application/json");
 		} else {
