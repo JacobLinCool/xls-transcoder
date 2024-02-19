@@ -1,0 +1,6 @@
+name = "xls-transcoder"
+main = "src/index.ts"
+compatibility_date = "2024-02-19"
+
+[limits]
+cpu_ms = 100

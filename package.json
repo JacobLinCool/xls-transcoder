@@ -1,0 +1,30 @@
+{
+	"private": true,
+	"name": "xls-transcoder",
+	"version": "0.0.0",
+	"scripts": {
+		"prepare": "husky",
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"format": "prettier --write . --ignore-path .gitignore"
+	},
+	"dependencies": {
+		"xlsx": "^0.18.5"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20240208.0",
+		"husky": "^9.0.11",
+		"lint-staged": "^15.2.2",
+		"prettier": "^3.2.5",
+		"prettier-plugin-organize-imports": "^3.2.4",
+		"typescript": "^5.3.3",
+		"wrangler": "^3.28.3"
+	},
+	"lint-staged": {
+		"*.{ts,json,yml,yaml,md}": [
+			"prettier --write"
+		]
+	},
+	"packageManager": "pnpm@8.15.3"
+}
