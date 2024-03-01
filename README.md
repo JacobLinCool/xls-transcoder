@@ -52,3 +52,11 @@ curl -X POST -d 'action=download&file=test.xls' 'https://xls-transcoder.jacob.wo
 You can use [Cloudflare Workers](https://workers.cloudflare.com/) to deploy your own instance of this service:
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/JacobLinCool/xls-transcoder)
+
+Also, a [Docker image](https://hub.docker.com/r/jacoblincool/xls-transcoder) is available for deploying on your own server:
+
+```bash
+docker run -p 8080:8080 jacoblincool/xls-transcoder
+```
+
+See [docker-compose.yml](./docker-compose.yml) for an example of using the Docker image.
