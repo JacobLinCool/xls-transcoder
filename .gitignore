@@ -130,3 +130,6 @@ dist
 
 .dev.vars
 .wrangler/
+
+worker.capnp
+cache/

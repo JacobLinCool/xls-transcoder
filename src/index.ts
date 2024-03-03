@@ -1,15 +1,18 @@
 export default {
-	async fetch(request: Request): Promise<Response> {
-		const url = new URL(request.url);
-		if (url.pathname === "/") {
-			return Response.redirect("https://github.com/JacobLinCool/xls-transcoder", 301);
-		}
-		if (url.pathname === "/favicon.ico") {
-			return new Response(null, { status: 404 });
-		}
+	async fetch(request: Request, _: Env, ctx: ExecutionContext): Promise<Response> {
+		return handle(request, ctx);
+	},
+};
 
-		const transcode = url.pathname.startsWith("/json") ? json : convert;
-		console.log("transcode", transcode);
+async function handle(request: Request, ctx: ExecutionContext): Promise<Response> {
+	const url = new URL(request.url);
+	if (url.pathname === "/") {
+		return Response.redirect("https://github.com/JacobLinCool/xls-transcoder", 301);
+	} else if (url.pathname === "/favicon.ico") {
+		return new Response(null, { status: 404 });
+	} else {
+		const transcoder = url.pathname.startsWith("/json") ? json : xlsx;
+		console.log("transcoder", transcoder);
 
 		const from = url.searchParams.get("from");
 		try {
@@ -26,9 +29,38 @@ export default {
 			}
 		}
 
-		const payload = { method: request.method, body: request.body, headers: request.headers };
+		return transcode(from, transcoder, request, ctx);
+	}
+}
+
+async function transcode(
+	from: string,
+	transcoder: (xls: ArrayBuffer) => Promise<ArrayBuffer | string>,
+	request: Request,
+	ctx: ExecutionContext,
+): Promise<Response> {
+	const cache = await caches.open("xls-transcoder");
+	const raw_key = `https://cache/raw/${from}`;
+	const result_key = `https://cache/${transcoder.name}/${from}`;
+	const cached_result = await cache.match(result_key);
+	if (cached_result) {
+		console.log("cache hit", result_key);
+		return cached_result;
+	}
+
+	const raw = await cache.match(raw_key);
+	let res: Response;
+	if (raw) {
+		console.log("cache hit", raw_key);
+		res = raw;
+	} else {
+		const payload = {
+			method: request.method,
+			body: request.body,
+			headers: request.headers,
+		};
 		console.log("fetch", from, payload);
-		const res = await fetch(from, payload);
+		res = await fetch(from, payload);
 		if (!res.ok) {
 			return new Response("Failed to fetch: " + res.statusText, { status: 500 });
 		}
@@ -37,26 +69,34 @@ export default {
 				status: 400,
 			});
 		}
-
-		const buffer = await res.arrayBuffer();
-		const transcoded = await transcode(buffer);
-
-		const headers = new Headers(res.headers);
-		headers.delete("Content-Disposition");
-		if (transcode === json) {
-			headers.set("Content-Type", "application/json");
-		} else {
-			headers.set(
-				"Content-Type",
-				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-			);
+		if (request.method === "GET") {
+			ctx.waitUntil(cache.put(raw_key, res.clone()));
 		}
+	}
 
-		return new Response(transcoded, { headers });
-	},
-};
+	const buffer = await res.arrayBuffer();
+	const transcoded = await transcoder(buffer);
 
-async function convert(xls: ArrayBuffer): Promise<ArrayBuffer> {
+	const headers = new Headers(res.headers);
+	headers.delete("Content-Disposition");
+	if (transcoder === json) {
+		headers.set("Content-Type", "application/json");
+	} else {
+		headers.set(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		);
+	}
+
+	const result = new Response(transcoded, { headers });
+	if (request.method === "GET") {
+		ctx.waitUntil(cache.put(result_key, result.clone()));
+	}
+
+	return result;
+}
+
+async function xlsx(xls: ArrayBuffer): Promise<ArrayBuffer> {
 	const XLSX = await import("xlsx");
 	const workbook = XLSX.read(xls, { type: "array" });
 	const converted = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
@@ -72,3 +112,5 @@ async function json(xls: ArrayBuffer): Promise<string> {
 	});
 	return JSON.stringify({ sheets });
 }
+
+interface Env {}
