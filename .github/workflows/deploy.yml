@@ -12,7 +12,7 @@ jobs:
         timeout-minutes: 60
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Setup PNPM
               uses: pnpm/action-setup@v3
